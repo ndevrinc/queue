@@ -60,8 +60,8 @@ class Database {
 		return $datetime->format( 'Y-m-d H:i:s' );
 	}
 
-	public static function insert( $args ) {
-		if ( self::$wpdb->insert( self::$table_name, $args ) ) {
+	public static function insert( $table_name, $args ) {
+		if ( self::$wpdb->insert( $table_name, $args ) ) {
 			return self::$wpdb->insert_id;
 		}
 

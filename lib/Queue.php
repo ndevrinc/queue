@@ -19,7 +19,22 @@ class Queue {
 		return $this->persistent;
 	}
 
-	public function insert() {
+	public function insert( $args ) {
+		$args = array(
+			'type'         => $args['type'],//Element_Type::SCRIPT,
+			'priority'     => $args['priority'],
+			'status'       => Element_Status::PENDING,
+			'data'         => $args['data'],//$data,
+			'wp_user'      => get_current_user_id(),
+			'queue_id'     => $args['queue_id'],//$queue_id,
+			'active'       => '1',
+			'created_date' => current_time( 'mysql' ),
+			'updated_date' => current_time( 'mysql' ),
+		);
+
+		$id = Database::insert( 'wp_element', $args );
+
+		return $id;
 	}
 
 	public function peek() {
@@ -65,7 +80,7 @@ class Queue {
 				'active'       => '1',
 			);
 
-			$id = Database::insert( $args );
+			$id = Database::insert( 'wp_queue', $args );
 
 			return $id;
 		}

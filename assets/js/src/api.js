@@ -45,7 +45,7 @@
                 _this.notice('Something went wrong', 'notice-error');
             });
         },
-        is_empty: function(queue_id) {
+        is_empty: function (queue_id) {
             var _this = this;
             $.post({
                 url: ajaxurl,
@@ -53,6 +53,30 @@
                     action: 'is_empty_queue',
                     data: {
                         queue_id: queue_id
+                    }
+                    // nonce_field: custom_ajax_vars.nonce
+                }
+            }).done(function (response) {
+                if (200 == response.status) {
+                    _this.notice(response.message, 'notice-success');
+                } else {
+                    _this.notice(response.message, 'notice-warning');
+                }
+            }).fail(function (e) {
+                _this.notice('Something went wrong', 'notice-error');
+            });
+        },
+        insert_element: function (args) {
+            var _this = this;
+            $.post({
+                url: ajaxurl,
+                data: {
+                    action: 'insert_element',
+                    data: {
+                        queue_id: args.queue_id,
+                        data: args.data,
+                        type: args.type,
+                        priority: args.priority
                     }
                     // nonce_field: custom_ajax_vars.nonce
                 }
@@ -92,6 +116,32 @@
                 } else {
                     _this.notice('Select a queue from the list first.', 'notice-warning');
                 }
+            });
+
+            $(document.body).on('change', '#element_types', function (e) {
+                e.preventDefault();
+                switch (this.value) {
+                    case '1' : //SCRIPT
+                        $('textarea[name="element_data[script]"]').toggleClass('hidden current');
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            $(document.body).on('click', '#insert-element', function (e) {
+                e.preventDefault();
+                var args = {};
+                args.queue_id = $("#queues option:selected").val();
+                args.type = $("#element_types option:selected").val();
+                args.priority = $("#element_priority").val();
+                args.data = JSON.stringify($('[name*="element_data"]').serializeArray());
+                if ('0' !== args.queue_id) {
+                    _this.insert_element(args);
+                } else {
+                    _this.notice('Select a queue from the list first.', 'notice-warning');
+                }
+
             });
         },
         notice: function (text, mode) {
