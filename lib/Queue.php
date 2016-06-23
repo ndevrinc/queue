@@ -11,8 +11,8 @@ class Queue {
 		Database::init();
 	}
 
-	public function is_empty() {
-		return Database::is_empty();
+	public function is_empty( $queue_id ) {
+		return Database::is_empty( $queue_id );
 	}
 
 	public function is_persistent() {
@@ -33,8 +33,8 @@ class Queue {
 	public function update() {
 	}
 
-	public function delete( $row_id ) {
-		return Database::delete( $row_id );
+	public function delete( $queue_id ) {
+		return Database::delete( $queue_id );
 	}
 
 	public function disable() {

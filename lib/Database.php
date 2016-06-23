@@ -4,12 +4,14 @@ namespace Queue\Lib;
 
 class Database {
 	private static $table_name;
+	private static $element_table_name;
 	private static $wpdb;
 
 	public static function init() {
 		global $wpdb;
 		self::$wpdb       = $wpdb;
 		self::$table_name = self::$wpdb->prefix . 'queue'; //Should we use our own prefix?
+		self::$element_table_name = self::$wpdb->prefix . 'element'; //Should we use our own prefix?
 
 		self::create_tables();
 	}
@@ -27,10 +29,9 @@ class Database {
 			UNIQUE KEY id (id)
 		) $charset_collate;";
 
-		$element_table_name = self::$wpdb->prefix . 'element'; //Should we use our own prefix?
 		$element_types      = "'" . implode( "','", Config::get( 'ELEMENT_TYPES' ) ) . "'";
 		$element_status     = "'" . implode( "','", Config::get( 'ELEMENT_STATUS' ) ) . "'";
-		$sql_element        = "CREATE TABLE IF NOT EXISTS " . $element_table_name . "(
+		$sql_element        = "CREATE TABLE IF NOT EXISTS " . self::$element_table_name . "(
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			`type` ENUM($element_types) NOT NULL,
 			priority INT DEFAULT 0 NOT NULL,
@@ -90,12 +91,12 @@ class Database {
 		return $results;
 	}
 
-	public static function is_empty() {
-//		if ( self::$wpdb->get_col( self::$wpdb->prepare( "SELECT * FROM " . self::$table_name . " LIMIT %d", array( 1 ) ) ) ) {
-//			return true;
-//		}
+	public static function is_empty($queue_id) {
+		if ( self::$wpdb->get_col( self::$wpdb->prepare( "SELECT * FROM " . self::$element_table_name . " WHERE `queue_id`=%d LIMIT %d", array($queue_id, 1 ) ) ) ) {
+			return false;
+		}
 
-		return false;
+		return true;
 
 	}
 }

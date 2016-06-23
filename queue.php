@@ -132,6 +132,12 @@ function queue_admin_options() {
 						<input type="button" id="delete-queue" class="button button-primary" value="Delete">
 					</td>
 				</tr>
+				<tr valign="top">
+					<th scope="row">Check if empty queue</th>
+					<td>
+						<input type="button" id="is-empty-queue" class="button button-primary" value="Delete">
+					</td>
+				</tr>
 
 				<!--<tr valign="top">
 					<th scope="row">New Option Name</th>

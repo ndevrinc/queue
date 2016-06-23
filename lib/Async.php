@@ -9,6 +9,7 @@ class Async {
 	public function set_actions() {
 		add_action( 'wp_ajax_add_queue', array( $this, 'add_new_queue' ) );
 		add_action( 'wp_ajax_delete_queue', array( $this, 'delete_queue' ) );
+		add_action( 'wp_ajax_is_empty_queue', array( $this, 'is_empty' ) );
 	}
 
 	public function add_new_queue() {
@@ -37,7 +38,7 @@ class Async {
 	}
 
 	public function delete_queue() {
-		if ( empty( $row_id = $_POST['data']['row_id'] ) ) {
+		if ( empty( $queue_id = $_POST['data']['queue_id'] ) ) {
 			$response = [
 				'status'  => 500,
 				'message' => 'Empty row id sent',
@@ -49,14 +50,14 @@ class Async {
 		}
 
 		$queue   = new Queue();
-		$deleted = $queue->delete( $row_id );
+		$deleted = $queue->delete( $queue_id );
 
 		if ( $deleted ) {
 			$response = [
 				'status'  => 200,
-				'message' => 'Queue ' . $row_id . ' deleted',
+				'message' => 'Queue ' . $queue_id . ' deleted',
 				'queue'   => [
-					'id' => $row_id,
+					'id' => $queue_id,
 				],
 			];
 		} else {
@@ -64,7 +65,41 @@ class Async {
 				'status'  => 500,
 				'message' => 'Error deleting a queue',
 				'queue'   => [
-					'id' => $row_id,
+					'id' => $queue_id,
+				],
+			];
+		}
+
+		wp_send_json( $response );
+	}
+
+	public function is_empty() {
+		if ( empty( $queue_id = $_POST['data']['queue_id'] ) ) {
+			$response = [
+				'status'  => 500,
+				'message' => 'Empty queue id sent',
+				'queue'   => [
+					'id' => '',
+				],
+			];
+			wp_send_json( $response );
+		}
+
+		$queue = new Queue();
+		if ( $queue->is_empty( $queue_id ) ) {
+			$response = [
+				'status'  => 200,
+				'message' => 'Queue ' . $queue_id . ' is empty',
+				'queue'   => [
+					'id' => $queue_id,
+				],
+			];
+		} else {
+			$response = [
+				'status'  => 200,
+				'message' => 'Queue ' . $queue_id . ' is not empty',
+				'queue'   => [
+					'id' => $queue_id,
 				],
 			];
 		}

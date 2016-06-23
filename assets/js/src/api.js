@@ -23,20 +23,41 @@
                 _this.notice('Something went wrong', 'notice-error');
             });
         },
-        delete: function (row_id) {
+        delete: function (queue_id) {
             var _this = this;
             $.post({
                 url: ajaxurl,
                 data: {
                     action: 'delete_queue',
                     data: {
-                        row_id: row_id
+                        queue_id: queue_id
                     }
                     // nonce_field: custom_ajax_vars.nonce
                 }
             }).done(function (response) {
                 if (200 == response.status) {
                     $("#queues option[value='" + response.queue.id + "']").remove();
+                    _this.notice(response.message, 'notice-success');
+                } else {
+                    _this.notice(response.message, 'notice-warning');
+                }
+            }).fail(function (e) {
+                _this.notice('Something went wrong', 'notice-error');
+            });
+        },
+        is_empty: function(queue_id) {
+            var _this = this;
+            $.post({
+                url: ajaxurl,
+                data: {
+                    action: 'is_empty_queue',
+                    data: {
+                        queue_id: queue_id
+                    }
+                    // nonce_field: custom_ajax_vars.nonce
+                }
+            }).done(function (response) {
+                if (200 == response.status) {
                     _this.notice(response.message, 'notice-success');
                 } else {
                     _this.notice(response.message, 'notice-warning');
@@ -58,6 +79,16 @@
                 var id_to_remove = $("#queues option:selected").val();
                 if ('0' !== id_to_remove) {
                     _this.delete(id_to_remove);
+                } else {
+                    _this.notice('Select a queue from the list first.', 'notice-warning');
+                }
+            });
+
+            $(document.body).on('click', '#is-empty-queue', function (e) {
+                e.preventDefault();
+                var id_to_check = $("#queues option:selected").val();
+                if ('0' !== id_to_check) {
+                    _this.is_empty(id_to_check);
                 } else {
                     _this.notice('Select a queue from the list first.', 'notice-warning');
                 }
