@@ -7,16 +7,12 @@ class Queue {
 
 	protected $persistent;
 
+	public function __construct() {
+		Database::init();
+	}
+
 	public function is_empty() {
-		global $wpdb;
-		$queue_table_name = $wpdb->prefix . 'queue'; //Should we use our own prefix?
-		$empty            = $wpdb->get_col( $wpdb->prepare( "SELECT * FROM $queue_table_name LIMIT %d", array(1) ) );
-		if ( empty( $empty ) ) {
-			return true;
-		}
-
-		return false;
-
+		return Database::is_empty();
 	}
 
 	public function is_persistent() {
@@ -37,7 +33,8 @@ class Queue {
 	public function update() {
 	}
 
-	public function delete() {
+	public function delete( $row_id ) {
+		return Database::delete( $row_id );
 	}
 
 	public function disable() {
@@ -59,13 +56,8 @@ class Queue {
 	 * @return int|bool returns Queue ID if valid or false
 	 */
 	public function create( $is_persistent = true ) {
-		global $wpdb;
-		$queue_table_name = $wpdb->prefix . 'queue'; //Should we use our own prefix?
-
 		$this->persistent = $is_persistent;
 		if ( $this->persistent ) {
-			Database::init();
-
 			$args = array(
 				'created_date' => current_time( 'mysql' ),
 				'updated_date' => current_time( 'mysql' ),
@@ -73,7 +65,7 @@ class Queue {
 				'active'       => '1',
 			);
 
-			$id = Database::insert( $queue_table_name, $args );
+			$id = Database::insert( $args );
 
 			return $id;
 		}

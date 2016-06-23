@@ -3,18 +3,22 @@
 namespace Queue\Lib;
 
 class Database {
+	private static $table_name;
+	private static $wpdb;
+
 	public static function init() {
+		global $wpdb;
+		self::$wpdb       = $wpdb;
+		self::$table_name = self::$wpdb->prefix . 'queue'; //Should we use our own prefix?
+
 		self::create_tables();
 	}
 
 	private static function create_tables() {
-		global $wpdb;
-
-		$charset_collate = $wpdb->get_charset_collate();
+		$charset_collate = self::$wpdb->get_charset_collate();
 
 		//Config::get( 'TABLE_PREFIX' )
-		$queue_table_name = $wpdb->prefix . 'queue'; //Should we use our own prefix?
-		$sql_queue        = "CREATE TABLE $queue_table_name (
+		$sql_queue = "CREATE TABLE IF NOT EXISTS " . self::$table_name . " (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			created_date DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			updated_date DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
@@ -23,10 +27,10 @@ class Database {
 			UNIQUE KEY id (id)
 		) $charset_collate;";
 
-		$element_table_name = $wpdb->prefix . 'element'; //Should we use our own prefix?
+		$element_table_name = self::$wpdb->prefix . 'element'; //Should we use our own prefix?
 		$element_types      = "'" . implode( "','", Config::get( 'ELEMENT_TYPES' ) ) . "'";
 		$element_status     = "'" . implode( "','", Config::get( 'ELEMENT_STATUS' ) ) . "'";
-		$sql_element        = "CREATE TABLE $element_table_name (
+		$sql_element        = "CREATE TABLE IF NOT EXISTS " . $element_table_name . "(
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			`type` ENUM($element_types) NOT NULL,
 			priority INT DEFAULT 0 NOT NULL,
@@ -55,14 +59,43 @@ class Database {
 		return $datetime->format( 'Y-m-d H:i:s' );
 	}
 
-	public static function insert( $table_name, $args ) {
-		global $wpdb;
+	public static function insert( $args ) {
+		if ( self::$wpdb->insert( self::$table_name, $args ) ) {
+			return self::$wpdb->insert_id;
+		}
 
-		$queue_id = $wpdb->insert(
-			$table_name,
-			$args
-		);
+		return false;
+	}
 
-		return $queue_id;
+	public static function delete( $row_id ) {
+		if ( self::$wpdb->delete( self::$table_name, array( 'id' => $row_id ) ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public static function get_results( $query ) {
+		$results = self::$wpdb->get_results( $query );
+
+		return $results;
+	}
+
+	public static function get_queues() {
+		$results = self::$wpdb->get_results(
+			"SELECT `id`, `updated_date`
+			FROM " . self::$table_name . "
+			WHERE active = '1';" );
+
+		return $results;
+	}
+
+	public static function is_empty() {
+//		if ( self::$wpdb->get_col( self::$wpdb->prepare( "SELECT * FROM " . self::$table_name . " LIMIT %d", array( 1 ) ) ) ) {
+//			return true;
+//		}
+
+		return false;
+
 	}
 }

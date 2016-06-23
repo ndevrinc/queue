@@ -20,8 +20,8 @@ class Config {
 			'in_progress',
 			'failed',
 			'disabled',
-			'success',
-		],
+			'complete',
+		], //Maybe this should sync with the Status class
 	);
 
 	private static $test = array();
