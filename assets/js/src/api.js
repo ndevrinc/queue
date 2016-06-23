@@ -135,6 +135,7 @@
             }).done(function (response) {
                 if (200 == response.status) {
                     _this.notice(response.message, 'notice-success');
+                    $('#queues').trigger('change');
                 } else {
                     _this.notice(response.message, 'notice-warning');
                 }
@@ -161,6 +162,7 @@
             }).done(function (response) {
                 if (200 == response.status) {
                     _this.notice(response.message, 'notice-success');
+                    $('#queues').trigger('change');
                 } else {
                     _this.notice(response.message, 'notice-warning');
                 }
@@ -182,6 +184,7 @@
             }).done(function (response) {
                 if (200 == response.status) {
                     _this.notice(response.message, 'notice-success');
+                    $('#queues').trigger('change');
                 } else {
                     _this.notice(response.message, 'notice-warning');
                 }
