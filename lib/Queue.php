@@ -2,7 +2,6 @@
 
 namespace Queue\Lib;
 
-//ToDo make class abstract
 class Queue {
 
 	protected $persistent;
@@ -21,12 +20,13 @@ class Queue {
 
 	public function insert( $args ) {
 		$args = array(
-			'type'         => $args['type'],//Element_Type::SCRIPT,
+			'type'         => $args['type'],
+			'name'         => $args['name'],
 			'priority'     => $args['priority'],
 			'status'       => Element_Status::PENDING,
-			'data'         => $args['data'],//$data,
+			'data'         => $args['data'],
 			'wp_user'      => get_current_user_id(),
-			'queue_id'     => $args['queue_id'],//$queue_id,
+			'queue_id'     => $args['queue_id'],
 			'active'       => '1',
 			'created_date' => current_time( 'mysql' ),
 			'updated_date' => current_time( 'mysql' ),
@@ -37,6 +37,27 @@ class Queue {
 		return $id;
 	}
 
+	public function edit_element( $args ) {
+		$args['update'] = array(
+			'type'         => $args['type'],
+			'name'         => $args['name'],
+			'priority'     => $args['priority'],
+			'data'         => $args['data'],
+			'wp_user'      => get_current_user_id(),
+			'queue_id'     => $args['queue_id'],
+			'updated_date' => current_time( 'mysql' ),
+		);
+		$args['where']  = array(
+			'id' => $args['id'],
+		);
+
+		return Database::update( 'wp_element', $args );
+	}
+
+	public function delete_element( $element_id ) {
+		return Database::delete( 'wp_element', $element_id );
+	}
+
 	public function peek() {
 		return $this->get_high_priority();
 	}
@@ -45,20 +66,19 @@ class Queue {
 		return $this->get_high_priority( true );
 	}
 
-	public function update() {
-	}
-
 	public function delete( $queue_id ) {
-		return Database::delete( $queue_id );
+		return Database::delete( 'wp_queue', $queue_id );
 	}
 
-	public function disable() {
-	}
+	public function disable( $queue_id ) {
+		$args['update'] = array(
+			'active' => 0,
+		);
+		$args['where']  = array(
+			'id' => $queue_id,
+		);
 
-	/**
-	 * Maybe implement this
-	 */
-	public function skip_element() {
+		return Database::update( 'wp_queue', $args );
 	}
 
 	/**
@@ -92,8 +112,8 @@ class Queue {
 		return true;
 	}
 
-	private function init_tables() {
-
+	public static function get_all_elements( $queue_id ) {
+		return Database::get_elements( $queue_id );
 	}
 
 }

@@ -90,8 +90,7 @@ function queue_admin_options() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
-	\Queue\Lib\Database::init();
-
+	$queue = new \Queue\Lib\Queue();
 	?>
 	<div class="wrap">
 		<h2>Queue Plugin</h2>
@@ -139,10 +138,24 @@ function queue_admin_options() {
 						<input type="button" id="is-empty-queue" class="button button-primary" value="Delete">
 					</td>
 				</tr>
+
+				<!--TBD-->
+				<!--<tr valign="top">
+					<th scope="row">Disable queue</th>
+					<td>
+						<input type="button" id="disable-queue" class="button button-primary" value="Disable">
+					</td>
+				</tr>-->
 			</table>
 
-			<h3>- Insert new element -</h3>
+			<h3>- Insert/Edit element -</h3>
 			<table class="form-table">
+				<tr valign="top">
+					<th scope="row">ID (Read only)</th>
+					<td>
+						<input type="text" name="element_id" id="element_id" value="" disabled/>
+					</td>
+				</tr>
 				<tr valign="top">
 					<th scope="row">Type</th>
 					<td>
@@ -157,6 +170,12 @@ function queue_admin_options() {
 							}
 							?>
 						</select>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">Name</th>
+					<td>
+						<input type="text" name="element_name" id="element_name" value="Default name"/>
 					</td>
 				</tr>
 				<tr valign="top">
@@ -176,6 +195,26 @@ function queue_admin_options() {
 					<th>
 						<input type="button" id="insert-element" class="button button-primary" value="Insert element">
 					</th>
+				</tr>
+				<tr valign="top">
+					<th>
+						<input type="button" id="edit-element" class="button button-primary" value="Edit element" disabled>
+					</th>
+				</tr>
+				<tr valign="top">
+					<th>
+						<input type="button" id="delete-element" class="button button-primary" value="Delete element" disabled>
+					</th>
+				</tr>
+			</table>
+			<h3>- Elements in selected queue -</h3>
+			<table class="form-table">
+				<tr valign="top">
+					<th scope="row">Type</th>
+					<td>
+						<select name="queue_elements" id="queue_elements" multiple="multiple" size="5">
+						</select>
+					</td>
 				</tr>
 			</table>
 		</form>

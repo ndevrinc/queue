@@ -9,18 +9,19 @@ class Database {
 
 	public static function init() {
 		global $wpdb;
-		self::$wpdb       = $wpdb;
-		self::$table_name = self::$wpdb->prefix . 'queue'; //Should we use our own prefix?
+		self::$wpdb               = $wpdb;
+		self::$table_name         = self::$wpdb->prefix . 'queue'; //Should we use our own prefix?
 		self::$element_table_name = self::$wpdb->prefix . 'element'; //Should we use our own prefix?
-
-		self::create_tables();
+		if ( ! get_option( 'queue_database_init' ) ) {
+			self::create_tables();
+			update_option( 'queue_database_init', true );
+		}
 	}
 
 	private static function create_tables() {
 		$charset_collate = self::$wpdb->get_charset_collate();
 
-		//Config::get( 'TABLE_PREFIX' )
-		$sql_queue = "CREATE TABLE IF NOT EXISTS " . self::$table_name . " (
+		$sql_queue = "CREATE TABLE " . self::$table_name . " (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			created_date DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			updated_date DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
@@ -29,14 +30,21 @@ class Database {
 			UNIQUE KEY id (id)
 		) $charset_collate;";
 
-		$element_types      = "'" . implode( "','", Config::get( 'ELEMENT_TYPES' ) ) . "'";
-		$element_status     = "'" . implode( "','", Config::get( 'ELEMENT_STATUS' ) ) . "'";
-		$sql_element        = "CREATE TABLE IF NOT EXISTS " . self::$element_table_name . "(
+		$type  = new Element_Type();
+		$types = $type->get_types();
+
+		$status   = new Element_Status();
+		$statuses = $status->get_types();
+
+		$element_types  = "'" . strtolower( implode( "','", array_keys( $types ) ) ) . "'";
+		$element_status = "'" . strtolower( implode( "','", array_keys( $statuses ) ) ) . "'";
+		$sql_element    = "CREATE TABLE " . self::$element_table_name . "(
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
 			`type` ENUM($element_types) NOT NULL,
 			priority INT DEFAULT 0 NOT NULL,
 			status ENUM($element_status) NOT NULL,
-			`data` VARCHAR(255),
+			`data` LONGTEXT,
 			wp_user VARCHAR(50) NOT NULL,
 			queue_id mediumint(9) NOT NULL,
 			active TINYINT(1) DEFAULT 1,
@@ -47,7 +55,6 @@ class Database {
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta( [ $sql_queue, $sql_element ] );
-
 	}
 
 	private static function get_current_datetime() {
@@ -68,18 +75,12 @@ class Database {
 		return false;
 	}
 
-	public static function delete( $row_id ) {
-		if ( self::$wpdb->delete( self::$table_name, array( 'id' => $row_id ) ) ) {
+	public static function delete( $table, $row_id ) {
+		if ( self::$wpdb->delete( $table, array( 'id' => $row_id ) ) ) {
 			return true;
 		}
 
 		return false;
-	}
-
-	public static function get_results( $query ) {
-		$results = self::$wpdb->get_results( $query );
-
-		return $results;
 	}
 
 	public static function get_queues() {
@@ -91,12 +92,37 @@ class Database {
 		return $results;
 	}
 
-	public static function is_empty($queue_id) {
-		if ( self::$wpdb->get_col( self::$wpdb->prepare( "SELECT * FROM " . self::$element_table_name . " WHERE `queue_id`=%d LIMIT %d", array($queue_id, 1 ) ) ) ) {
+	public static function get_elements( $queue_id ) {
+		$results = self::$wpdb->get_results(
+			"SELECT `id`, `name`, `type`, `priority`, `status`, `data`, `updated_date`
+			FROM " . self::$element_table_name . "
+			WHERE `active` = '1' AND `queue_id` = " . $queue_id . ";" );
+
+		return $results;
+	}
+
+	public static function is_empty( $queue_id ) {
+		if ( self::$wpdb->get_col(
+			self::$wpdb->prepare(
+				"SELECT * FROM " . self::$element_table_name . " WHERE `queue_id`=%d LIMIT %d",
+				array(
+					$queue_id,
+					1
+				)
+			) )
+		) {
 			return false;
 		}
 
 		return true;
 
+	}
+
+	public static function update( $table, $args ) {
+		if ( self::$wpdb->update( $table, $args['update'], $args['where'] ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }
