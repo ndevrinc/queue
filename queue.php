@@ -70,6 +70,7 @@ add_action( 'admin_notices', function () {
 
 add_action( 'admin_enqueue_scripts', function () {
 	wp_enqueue_script( 'api', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/src/api.js', [ ], false, true );
+	wp_enqueue_script( 'events', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/src/options_events.js', [ ], false, true );
 } );
 
 //add_action( 'wp_ajax_add_queue', 'my_action_callback' );
