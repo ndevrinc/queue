@@ -51,7 +51,7 @@ class Database {
 			created_date DATETIME DEFAULT "0000-00-00 00:00:00" NOT NULL,
 			updated_date DATETIME DEFAULT "0000-00-00 00:00:00" NOT NULL,
 			UNIQUE KEY id (id)
-		)' . $charset_collate;;
+		)' . $charset_collate;
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta( [ $sql_queue, $sql_element ] );
