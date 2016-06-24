@@ -58,6 +58,10 @@ class Queue {
 		return Database::delete( 'wp_element', $element_id );
 	}
 
+	public function get_all() {
+		return Database::get_queues();
+	}
+
 	public function peek( $queue_id ) {
 		return $this->get_high_priority( $queue_id );
 	}
