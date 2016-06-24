@@ -1,0 +1,7 @@
+{
+  "name": "NdevrInc/Queue",
+  "description": "Queue WordPress plugin by Ndevr",
+  "require-dev": {
+    "wp-coding-standards/wpcs": "dev-master"
+  }
+}

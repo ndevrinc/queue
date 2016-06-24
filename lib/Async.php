@@ -271,7 +271,7 @@ class Async {
 				'message' => 'Elements retrieved',
 				'queue'   => [
 					'id'       => $queue_id,
-					'elements' => json_encode( $elements )
+					'elements' => json_encode( $elements ),
 				],
 			];
 		} else {
@@ -321,7 +321,7 @@ class Async {
 				'message' => 'Highest priority retrieved',
 				'queue'   => [
 					'id'      => $queue_id,
-					'element' => json_encode( $element )
+					'element' => json_encode( $element ),
 				],
 			];
 		} else {

@@ -78,14 +78,13 @@ class Queue {
 		} );
 
 		add_action( 'admin_enqueue_scripts', function () {
-			wp_enqueue_script( 'api', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/src/api.js', [ ], false, true );
-			wp_enqueue_script( 'events', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/src/options_events.js', [ ], false, true );
+			wp_enqueue_script( 'queue', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/build/queue.min.js', [ ], false, true );
 		} );
 	}
 
 	public function queue_admin_options() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+			wp_die( __( 'You do not have sufficient permissions to access this page.', 'queue' ) );
 		}
 		$queue = new \Queue\Lib\Queue(); //Initializing, we could use this object instead of AJAX
 		?>
