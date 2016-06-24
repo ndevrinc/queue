@@ -58,12 +58,12 @@ class Queue {
 		return Database::delete( 'wp_element', $element_id );
 	}
 
-	public function peek() {
-		return $this->get_high_priority();
+	public function peek( $queue_id ) {
+		return $this->get_high_priority( $queue_id );
 	}
 
-	public function pop() {
-		return $this->get_high_priority( true );
+	public function pop( $queue_id ) {
+		return $this->get_high_priority( $queue_id, true );
 	}
 
 	public function delete( $queue_id ) {
@@ -108,8 +108,8 @@ class Queue {
 		return false;
 	}
 
-	private function get_high_priority( $remove = false ) {
-		return true;
+	private function get_high_priority( $queue_id, $remove = false ) {
+		return Database::get_highest_priority( $queue_id, $remove );
 	}
 
 	public static function get_all_elements( $queue_id ) {

@@ -96,7 +96,8 @@ class Database {
 		$results = self::$wpdb->get_results(
 			"SELECT `id`, `name`, `type`, `priority`, `status`, `data`, `updated_date`
 			FROM " . self::$element_table_name . "
-			WHERE `active` = '1' AND `queue_id` = " . $queue_id . ";" );
+			WHERE `active` = '1' AND `queue_id` = " . $queue_id . "
+			ORDER BY `priority` DESC, `updated_date`;" );
 
 		return $results;
 	}
@@ -124,5 +125,20 @@ class Database {
 		}
 
 		return false;
+	}
+
+	public static function get_highest_priority( $queue_id, $delete ) {
+		$priority = self::$wpdb->get_row(
+			"SELECT `id`, `name`, `type`, `priority`, `status`, `data`, `updated_date`
+			FROM " . self::$element_table_name . "
+			WHERE `active` = '1' AND `queue_id` = " . $queue_id . "
+			ORDER BY `priority` DESC, `updated_date`
+			LIMIT 1;" );
+
+		if ( $delete ) {
+			self::delete( self::$element_table_name, $priority->id );
+		}
+
+		return $priority;
 	}
 }

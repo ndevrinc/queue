@@ -136,7 +136,7 @@ function queue_admin_options() {
 				<tr valign="top">
 					<th scope="row">Check if empty queue</th>
 					<td>
-						<input type="button" id="is-empty-queue" class="button button-primary" value="Delete">
+						<input type="button" id="is-empty-queue" class="button button-primary" value="Is Empty?">
 					</td>
 				</tr>
 
@@ -194,6 +194,16 @@ function queue_admin_options() {
 				</tr>
 				<tr valign="top">
 					<th>
+						<input type="button" id="peek-element" class="button button-primary" value="Peek element">
+					</th>
+				</tr>
+				<tr valign="top">
+					<th>
+						<input type="button" id="pop-element" class="button button-primary" value="Pop element">
+					</th>
+				</tr>
+				<tr valign="top">
+					<th>
 						<input type="button" id="insert-element" class="button button-primary" value="Insert element">
 					</th>
 				</tr>
@@ -211,11 +221,10 @@ function queue_admin_options() {
 			<h3>- Elements in selected queue -</h3>
 			<table class="form-table">
 				<tr valign="top">
-					<th scope="row">Type</th>
-					<td>
-						<select name="queue_elements" id="queue_elements" multiple="multiple" size="5">
+					<th>
+						<select name="queue_elements" id="queue_elements" multiple="multiple" size="5" style="min-width: 200px;">
 						</select>
-					</td>
+					</th>
 				</tr>
 			</table>
 		</form>

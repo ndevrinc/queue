@@ -15,6 +15,8 @@ class Async {
 		add_action( 'wp_ajax_get_all_elements', array( $this, 'get_all_elements' ) );
 		add_action( 'wp_ajax_edit_element', array( $this, 'edit_element' ) );
 		add_action( 'wp_ajax_delete_element', array( $this, 'delete_element' ) );
+		add_action( 'wp_ajax_peek_element', array( $this, 'peek' ) );
+		add_action( 'wp_ajax_pop_element', array( $this, 'pop' ) );
 	}
 
 	public function add_new_queue() {
@@ -260,7 +262,7 @@ class Async {
 			wp_send_json( $response );
 		}
 
-		$queue   = new Queue();
+		$queue    = new Queue();
 		$elements = $queue->get_all_elements( $queue_id );
 
 		if ( $elements ) {
@@ -268,7 +270,7 @@ class Async {
 				'status'  => 200,
 				'message' => 'Elements retrieved',
 				'queue'   => [
-					'id' => $queue_id,
+					'id'       => $queue_id,
 					'elements' => json_encode( $elements )
 				],
 			];
@@ -283,5 +285,55 @@ class Async {
 		}
 
 		wp_send_json( $response );
+	}
+
+	public function peek() {
+		wp_send_json( $this->get_priority( false ) );
+	}
+
+	public function pop() {
+		wp_send_json( $this->get_priority( true ) );
+	}
+
+	public function get_priority( $remove ) {
+		if ( empty( $queue_id = $_POST['data']['queue_id'] ) ) {
+			$response = [
+				'status'  => 500,
+				'message' => 'Empty row id sent',
+				'queue'   => [
+					'id' => '',
+				],
+			];
+			wp_send_json( $response );
+		}
+
+		$queue = new Queue();
+		if ( $remove ) {
+			$element = $queue->pop( $queue_id );
+
+		} else {
+			$element = $queue->peek( $queue_id );
+		}
+
+		if ( $element ) {
+			$response = [
+				'status'  => 200,
+				'message' => 'Highest priority retrieved',
+				'queue'   => [
+					'id'      => $queue_id,
+					'element' => json_encode( $element )
+				],
+			];
+		} else {
+			$response = [
+				'status'  => 500,
+				'message' => 'Error retrieving the highest priority',
+				'queue'   => [
+					'id' => $queue_id,
+				],
+			];
+		}
+
+		return $response;
 	}
 }
