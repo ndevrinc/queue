@@ -73,12 +73,12 @@ var Events = Events || {};
                 }
             });
 
-            $(document.body).on('click', '#queue_elements', function (e) {
+            $(document.body).on('click', '#queue_elements > option', function (e) {
                 e.preventDefault();
                 //Populate edit fields
                 $('#edit-element').prop('disabled', false);
                 $('#delete-element').prop('disabled', false);
-                var data = JSON.parse(decodeURI(this.selectedOptions[0].dataset.serialized));
+                var data = JSON.parse(decodeURI(this.dataset.serialized));
                 _this.populate_element(data);
             });
 
