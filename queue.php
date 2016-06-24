@@ -13,6 +13,8 @@
  */
 
 class Queue {
+	public $queue;
+
 	public function __construct() {
 		$this->register_autoloader();
 		$this->init();
@@ -62,6 +64,7 @@ class Queue {
 		$async = new \Queue\Lib\Async();
 		$async->init();
 		$this->set_actions();
+		$this->queue = new \Queue\Lib\Queue(); //Initializing, we could use this object instead of AJAX
 	}
 
 	protected function set_actions() {
@@ -86,7 +89,7 @@ class Queue {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'queue' ) );
 		}
-		$queue = new \Queue\Lib\Queue(); //Initializing, we could use this object instead of AJAX
+
 		?>
 		<div class="wrap">
 			<h2>Queue Plugin</h2>
@@ -95,7 +98,7 @@ class Queue {
 					<tr valign="top">
 						<th scope="row">Queues</th>
 						<?php
-						$queues = $queue->get_all();
+						$queues = $this->queue->get_all();
 						?>
 						<td>
 							<select name="queues" id="queues">
