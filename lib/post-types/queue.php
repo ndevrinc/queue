@@ -176,7 +176,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				return $query;
 			}
 
-			return new \WP_Error( 404, 'Not found' );
+			return new \WP_Error( 'not found', 'No queues found' );
 		}
 
 		public static function insert( $queue, $args ) {
@@ -187,7 +187,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 			}
 
 			if ( empty( $parent_id ) ) {
-				return new \WP_Error( 404, 'No parent found.' );
+				return new \WP_Error( 'empty', 'No parent queue found.' );
 			}
 
 			$args = wp_parse_args( $args, [
@@ -209,7 +209,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				update_post_meta( $new_element, 'queue_element_type', $args['type'] );
 				update_post_meta( $new_element, $args['type'] . '_queue_type_content', $args['content'] );
 			} else {
-				return new \WP_Error( 500, 'Error while inserting new element' );
+				return new \WP_Error( 'system', 'Error while inserting new element' );
 			}
 
 			return $new_element;
@@ -249,7 +249,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				return $query->posts[0];
 			}
 
-			return new \WP_Error( 404, 'Not found' );
+			return new \WP_Error( 'not found', 'Queue element not found' );
 		}
 
 		/**
