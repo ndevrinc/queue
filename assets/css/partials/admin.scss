@@ -1,0 +1,10 @@
+body.wp-admin {
+	&.post-type-queue {
+		div[id$="-queue-type"] {
+			margin: 10px 0;
+			input, textarea {
+				width: 100%;
+			}
+		}
+	}
+}

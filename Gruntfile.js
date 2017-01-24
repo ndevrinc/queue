@@ -42,6 +42,17 @@ module.exports = function (grunt) {
             }
         },
 
+        sass: {
+            dist: {
+                options: {
+                    sourceMap: true
+                },
+                files: {
+                    'assets/css/custom-admin.css': 'assets/css/partials/admin.scss'
+                }
+            }
+        },
+
         uglify: {
             targets: {
                 files: {
@@ -65,12 +76,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-wp-readme-to-markdown');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-phpcs');
+    grunt.loadNpmTasks('grunt-sass');
 
     grunt.registerTask('i18n', ['addtextdomain', 'makepot']);
     grunt.registerTask('readme', ['wp_readme_to_markdown']);
 
     grunt.registerTask('phpcs', [ 'phpcs' ]);
-    grunt.registerTask('default', [ 'uglify' ]);
+    grunt.registerTask('default', [ 'uglify', 'sass' ]);
 
     grunt.util.linefeed = '\n';
 
