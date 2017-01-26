@@ -107,7 +107,11 @@ if ( ! class_exists( 'Queue' ) ) {
 			} );
 
 			add_action( 'admin_enqueue_scripts', function () {
-				wp_enqueue_script( 'queue-js', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/build/queue.min.js', [], FALSE, TRUE );
+
+				wp_register_script( 'queue-js', plugins_url( 'queue/assets/js', dirname( __FILE__ ) ) . '/build/queue.min.js' );
+				wp_localize_script( 'queue-js', 'wpApiSettings', [ 'root' => esc_url_raw( rest_url() ), 'nonce' => wp_create_nonce( 'wp_rest' ) ] );
+				wp_enqueue_script( 'queue-js' );
+
 				wp_enqueue_style( 'custom-admin-css', plugins_url( 'queue/assets/css', dirname( __FILE__ ) ) . '/custom-admin.css' );
 			} );
 

@@ -44,6 +44,27 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				'save_queue_data'
 			], 10, 3 );
 
+			/**
+			 * This will delete all children if a parent post is being deleted permanently
+			 */
+			add_action( 'delete_post', [
+				$this,
+				'action_delete_post'
+			] );
+
+			/**
+			 * This will move to the trash all children if a parent post is also being moved to the trash
+			 */
+			add_action( 'wp_trash_post', [
+				$this,
+				'action_trash_post'
+			] );
+
+			/**
+			 * Declares the REST endpoints
+			 */
+			add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
+
 		}
 
 		/**
@@ -74,7 +95,6 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				'has_archive'         => FALSE,
 				'publicly_queryable'  => FALSE,
 				'exclude_from_search' => TRUE,
-				'show_in_rest'        => TRUE,
 				'hierarchical'        => TRUE,
 				'menu_position'       => 65,
 				'menu_icon'           => 'dashicons-list-view',
@@ -157,6 +177,8 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 		}
 
 		/**
+		 * Returns all the Queues in the system
+		 *
 		 * @return \WP_Query|\WP_Error
 		 */
 		public static function getQueues() {
@@ -179,6 +201,14 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 			return new \WP_Error( 'not found', 'No queues found' );
 		}
 
+		/**
+		 * Inserts an element in a queue
+		 *
+		 * @param \WP_Post|int $queue
+		 * @param array $args Args should include 'type', 'title', 'content', 'priority'
+		 *
+		 * @return int|\WP_Error
+		 */
 		public static function insert( $queue, $args ) {
 			if ( is_object( $queue ) ) {
 				$parent_id = $queue->ID;
@@ -209,7 +239,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				update_post_meta( $new_element, 'queue_element_type', $args['type'] );
 				update_post_meta( $new_element, $args['type'] . '_queue_type_content', $args['content'] );
 			} else {
-				return new \WP_Error( 'system', 'Error while inserting new element' );
+				return new \WP_Error( 'system', 'Error while inserting new element', array( 'status' => 500 )  );
 			}
 
 			return $new_element;
@@ -223,20 +253,25 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 		 * In case two elements have the same priority, the published date is used as a factor.
 		 *
 		 * @param int|\WP_Post $queue
+		 * @param bool $lowest
 		 *
 		 * @return \WP_Post|\WP_Error
 		 */
-		public static function peek( $queue ) {
+		public static function peek( $queue, $lowest = FALSE ) {
 			if ( is_object( $queue ) ) {
 				$id = $queue->ID;
 			} else {
 				$id = $queue;
 			}
 
+			if ( empty( $id ) ) {
+				return new \WP_Error( 'argument_missing', esc_html__( 'The post id is missing. Please refer to the documentation for further help.' ), array( 'status' => 404 ) );
+			}
+
 			$args = [
 				'post_parent'         => $id,
 				'posts_per_page'      => 1,
-				'order'               => 'ASC',
+				'order'               => ( ! $lowest ) ? 'ASC' : 'DESC',
 				'order_by'            => 'menu_order date',
 				'post_type'           => 'queue',
 				'post_status'         => 'publish',
@@ -249,7 +284,7 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				return $query->posts[0];
 			}
 
-			return new \WP_Error( 'not found', 'Queue element not found' );
+			return new \WP_Error( 'not found', 'Queue element not found', array( 'status' => 404 )  );
 		}
 
 		/**
@@ -273,11 +308,23 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 
 		}
 
+		/**
+		 * Deletes an element
+		 *
+		 * @param \WP_Post|int $element
+		 * @param bool $bypass_trash
+		 *
+		 * @return array|false|mixed|\WP_Error|\WP_Post
+		 */
 		public static function delete( $element, $bypass_trash = FALSE ) {
 			if ( is_object( $element ) ) {
 				$element_id = $element->ID;
 			} else {
 				$element_id = $element;
+			}
+
+			if ( empty( $element_id ) ) {
+				return new \WP_Error( 'argument_missing', esc_html__( 'The post id is missing. Please refer to the documentation for further help.' ), array( 'status' => 404 ) );
 			}
 
 			return wp_delete_post( $element_id, $bypass_trash );
@@ -350,5 +397,196 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 			] );
 		}
 
+		/**
+		 * Hook callback for deleting a queue element
+		 *
+		 * @param $postid
+		 */
+		public function action_delete_post( $postid ) {
+			global $post_type;
+			if ( $post_type != 'queue' ) {
+				return;
+			}
+
+			$args     = array(
+				'post_parent' => $postid,
+				'post_type'   => $post_type,
+				'numberposts' => - 1,
+				'post_status' => 'any'
+			);
+			$children = get_children( $args );
+
+			if ( ! empty( $children ) ) {
+				remove_action( 'delete_post', [
+					$this,
+					'action_delete_post'
+				] );
+
+				remove_action( 'wp_trash_post', [
+					$this,
+					'action_delete_post'
+				] );
+				foreach ( $children as $child_id => $child ) {
+					wp_delete_post( $child_id );
+				}
+				add_action( 'delete_post', [
+					$this,
+					'action_delete_post'
+				] );
+
+				add_action( 'wp_trash_post', [
+					$this,
+					'action_delete_post'
+				] );
+			}
+		}
+
+		/**
+		 * Hook callback for moving a queue element to the trash
+		 *
+		 * @param $postid
+		 */
+		public function action_trash_post( $postid ) {
+			global $post_type;
+			if ( $post_type != 'queue' ) {
+				return;
+			}
+
+			$args     = array(
+				'post_parent' => $postid,
+				'post_type'   => $post_type,
+				'numberposts' => - 1,
+				'post_status' => 'any'
+			);
+			$children = get_children( $args );
+
+			if ( ! empty( $children ) ) {
+				remove_action( 'delete_post', [
+					$this,
+					'action_delete_post'
+				] );
+
+				remove_action( 'wp_trash_post', [
+					$this,
+					'action_delete_post'
+				] );
+				foreach ( $children as $child_id => $child ) {
+					wp_trash_post( $child_id );
+				}
+				add_action( 'delete_post', [
+					$this,
+					'action_delete_post'
+				] );
+
+				add_action( 'wp_trash_post', [
+					$this,
+					'action_delete_post'
+				] );
+			}
+		}
+
+		/**
+		 * Registering REST endpoints
+		 */
+		public function register_endpoints() {
+			register_rest_route( 'queue/v1', '/peek', [
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ $this, 'rest_peek' ],
+				'permission_callback' => [
+					$this,
+					'get_items_permissions_check'
+				],
+			] );
+
+			register_rest_route( 'queue/v1', '/insert', [
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ $this, 'rest_insert' ],
+				'permission_callback' => [
+					$this,
+					'get_items_permissions_check'
+				],
+			] );
+
+			register_rest_route( 'queue/v1', '/delete', [
+				'methods'             => \WP_REST_Server::DELETABLE,
+				'callback'            => [ $this, 'rest_delete' ],
+				'permission_callback' => [
+					$this,
+					'get_items_permissions_check'
+				],
+			] );
+		}
+
+		/**
+		 * REST endpoint for peek
+		 *
+		 * @return mixed|\WP_REST_Response
+		 */
+		public function rest_peek() {
+			$args = wp_parse_args( $_POST, [
+				'queue_id' => NULL,
+			] );
+
+			return rest_ensure_response( self::peek( $args['queue_id'] ) );
+		}
+
+		/**
+		 * REST endpoint for insert
+		 *
+		 * @return mixed|\WP_REST_Response
+		 */
+		public function rest_insert() {
+			$args = wp_parse_args( $_POST, [
+				'queue_id' => NULL,
+				'type'     => 'action',
+				'title'    => 'New element',
+				'content'  => '',
+				'priority' => 9999
+			] );
+
+			return rest_ensure_response( self::insert( $args['queue_id'], $args ) );
+		}
+
+		/**
+		 * REST endpoint for delete
+		 *
+		 * @return mixed|\WP_REST_Response
+		 */
+		public function rest_delete() {
+			$args = wp_parse_args( $_POST, [
+				'post_id' => NULL,
+			] );
+
+			return rest_ensure_response( self::delete( $args['post_id'] ) );
+		}
+
+		/**
+		 * Check permissions for the posts.
+		 *
+		 * @param \WP_REST_Request $request Current request.
+		 *
+		 * @return \WP_Error|bool
+		 */
+		public function get_items_permissions_check( $request ) {
+			if ( ! current_user_can( 'read' ) ) {
+				return new \WP_Error( 'rest_forbidden', esc_html__( 'You cannot view the post resource.' ), array( 'status' => $this->authorization_status_code() ) );
+			}
+
+			return TRUE;
+		}
+
+		/**
+		 * Sets up the proper HTTP status code for authorization.
+		 */
+		public function authorization_status_code() {
+
+			$status = 401;
+
+			if ( is_user_logged_in() ) {
+				$status = 403;
+			}
+
+			return $status;
+		}
 	}
 }

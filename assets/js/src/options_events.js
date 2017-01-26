@@ -4,6 +4,19 @@ var Events = Events || {};
         attach_handlers: function () {
             var _this = this;
 
+            $.ajax( {
+                url: wpApiSettings.root + 'queue/v1/peek',
+                method: 'POST',
+                beforeSend: function ( xhr ) {
+                    xhr.setRequestHeader( 'X-WP-Nonce', wpApiSettings.nonce );
+                },
+                data:{
+                    'title' : 'Hello Moon'
+                }
+            } ).done( function ( response ) {
+                console.log( response );
+            } );
+
             /**
              * Handles the hide and show for the queue types
              */
