@@ -18,6 +18,11 @@ if ( ! class_exists( 'Log' ) ) {
 			 * Attaching the custom post type callback to the init action hook
 			 */
 			add_action( 'init', [ $this, 'init_post_type' ] );
+
+			/**
+			 * Add capabilities
+			 */
+			add_action( 'admin_init', [ $this, 'add_queue_caps' ] );
 		}
 
 		/**
@@ -53,6 +58,19 @@ if ( ! class_exists( 'Log' ) ) {
 				'menu_position'       => 65,
 				'menu_icon'           => 'dashicons-portfolio',
 				'supports'            => [ 'title', 'author', 'excerpt' ],
+				'capabilities'        => [
+					'edit_post'          => 'edit_log',
+					'edit_posts'         => 'edit_logs',
+					'edit_others_posts'  => 'edit_other_logs',
+					'publish_posts'      => 'publish_logs',
+					'read_post'          => 'read_log',
+					'read_private_posts' => 'read_private_logs',
+					'delete_post'        => 'delete_log',
+					'delete_posts'       => 'delete_logs',
+					'create_posts'       => 'edit_log',
+				],
+				// as pointed out by iEmanuele, adding map_meta_cap will map the meta correctly
+				'map_meta_cap'        => FALSE,
 			];
 
 			register_post_type( 'log', $args );
@@ -102,6 +120,23 @@ if ( ! class_exists( 'Log' ) ) {
 				'post_status'         => 'publish',
 				'ignore_sticky_posts' => TRUE,
 			] );
+		}
+
+		/**
+		 * Adding capabilities for log post type (only admin)
+		 */
+		public function add_queue_caps() {
+			// gets the administrator role
+			$admins = get_role( 'administrator' );
+
+			$admins->add_cap( 'edit_log' );
+			$admins->add_cap( 'edit_logs' );
+			$admins->add_cap( 'edit_other_logs' );
+			$admins->add_cap( 'publish_logs' );
+			$admins->add_cap( 'read_log' );
+			$admins->add_cap( 'read_private_logs' );
+			$admins->add_cap( 'delete_log' );
+			$admins->add_cap( 'delete_logs' );
 		}
 	}
 }

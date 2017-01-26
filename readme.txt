@@ -1,10 +1,9 @@
 === Queue ===
-Contributors: (this should be a list of wordpress.org userid's)
-Donate link: http://example.com/
-Tags: comments, spam
+Contributors: andreafuggetta
+Tags: queue, ndevr
 Requires at least: 3.0.1
-Tested up to: 3.4
-Stable tag: 4.3
+Tested up to: 4.7
+Stable tag: 4.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -92,23 +91,16 @@ plugins where more information needs to be conveyed that doesn't fit into the ca
 
 Ordered list:
 
-1. Some feature
-1. Another feature
-1. Something else about the plugin
-
-Unordered list:
-
-* something
-* something else
-* third thing
-
-Here's a link to [WordPress](http://wordpress.org/ "Your favorite software") and one to [Markdown's Syntax Documentation][markdown syntax].
-Titles are optional, naturally.
-
-[markdown syntax]: http://daringfireball.net/projects/markdown/syntax
-            "Markdown is what the parser uses to process much of the readme file"
-
-Markdown uses email style notation for blockquotes and I've been told:
-> Asterisks for *emphasis*. Double it up  for **strong**.
-
-`<?php code(); // goes in backticks ?>`
+1. jQuery AJAX request from a WordPress installation
+`$.ajax( {
+     url: wpApiSettings.root + 'queue/v1/peek',
+     method: 'POST',
+     beforeSend: function ( xhr ) {
+         xhr.setRequestHeader( 'X-WP-Nonce', wpApiSettings.nonce );
+     },
+     data:{
+         'queue_id' : 57
+     }
+ } ).done( function ( response ) {
+     console.log( response );
+ } );`

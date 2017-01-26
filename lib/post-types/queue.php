@@ -65,6 +65,11 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 			 */
 			add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
 
+			/**
+			 * Add capabilities
+			 */
+			add_action( 'admin_init', [ $this, 'add_queue_caps' ] );
+
 		}
 
 		/**
@@ -99,6 +104,19 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 				'menu_position'       => 65,
 				'menu_icon'           => 'dashicons-list-view',
 				'supports'            => [ 'title', 'page-attributes' ],
+				'capabilities'        => [
+					'edit_post'          => 'edit_queue',
+					'edit_posts'         => 'edit_queues',
+					'edit_others_posts'  => 'edit_other_queues',
+					'publish_posts'      => 'publish_queues',
+					'read_post'          => 'read_queue',
+					'read_private_posts' => 'read_private_queues',
+					'delete_post'        => 'delete_queue',
+					'delete_posts'       => 'delete_queues',
+					'create_posts'       => 'edit_queue',
+				],
+				// as pointed out by iEmanuele, adding map_meta_cap will map the meta correctly
+				'map_meta_cap'        => FALSE,
 			];
 
 			register_post_type( 'queue', $args );
@@ -587,6 +605,23 @@ if ( ! class_exists( '\Queue\Lib\PostTypes\Queue' ) ) {
 			}
 
 			return $status;
+		}
+
+		/**
+		 * Adding capabilities for queue post type (only admin)
+		 */
+		public function add_queue_caps() {
+			// gets the administrator role
+			$admins = get_role( 'administrator' );
+
+			$admins->add_cap( 'edit_queue' );
+			$admins->add_cap( 'edit_queues' );
+			$admins->add_cap( 'edit_other_queues' );
+			$admins->add_cap( 'publish_queues' );
+			$admins->add_cap( 'read_queue' );
+			$admins->add_cap( 'read_private_queues' );
+			$admins->add_cap( 'delete_queue' );
+			$admins->add_cap( 'delete_queues' );
 		}
 	}
 }
